@@ -1,0 +1,534 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover"><title>Помощник ШРС — демо</title>
+<meta name="claude:viewport-fit-sides" content="cover">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Golos+Text:wght@400;500;600;700&family=Unbounded:wght@500;700&display=swap">
+<style>
+/* Layout: слева сценарии, справа «телефон» с тремя экранами (родитель, приложение, администратор); ниже во всю ширину — панель руководителя. Палитра: лёд, синяя линия, красная линия ворот. */
+:root{
+  --bg:#EAF0F5; --panel:#FFFFFF; --ink:#0D1A29; --muted:#5A6A7C; --line:#D2DCE6;
+  --navy:#13304E; --navy-ink:#FFFFFF; --accent:#D3243B; --blue:#1F5FA8;
+  --chat:#DCE6EF; --in:#FFFFFF; --out:#D6E8FA; --sys:rgba(19,48,78,.6);
+  --ok:#1E8A55; --warn:#B7740B; --chip:#F3F7FA;
+  --display:"Unbounded","Golos Text",system-ui,sans-serif;
+  --body:"Golos Text",system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;
+}
+@media (prefers-color-scheme:dark){:root:not([data-theme="light"]){
+  --bg:#0A131C; --panel:#111E2B; --ink:#E4ECF4; --muted:#8C9DAF; --line:#22344A;
+  --navy:#0E253C; --navy-ink:#E4ECF4; --accent:#FF5A70; --blue:#6FA8E8;
+  --chat:#0D1823; --in:#182838; --out:#1D3F60; --sys:rgba(228,236,244,.55);
+  --ok:#4CC38A; --warn:#E5A93A; --chip:#162536; color-scheme:dark}}
+:root[data-theme="dark"]{
+  --bg:#0A131C; --panel:#111E2B; --ink:#E4ECF4; --muted:#8C9DAF; --line:#22344A;
+  --navy:#0E253C; --navy-ink:#E4ECF4; --accent:#FF5A70; --blue:#6FA8E8;
+  --chat:#0D1823; --in:#182838; --out:#1D3F60; --sys:rgba(228,236,244,.55);
+  --ok:#4CC38A; --warn:#E5A93A; --chip:#162536; color-scheme:dark}
+*{box-sizing:border-box}[hidden]{display:none!important}html,body{margin:0}img{max-width:100%}
+body{background:var(--bg);color:var(--ink);font-family:var(--body);font-size:15px;line-height:1.5;
+  padding-left:max(16px,env(safe-area-inset-left,0px));padding-right:max(16px,env(safe-area-inset-right,0px));padding-block:28px 48px}
+button,input,select{font:inherit;color:inherit}
+.wrap{max-width:1120px;margin:0 auto;display:grid;grid-template-columns:minmax(0,1fr) 410px;gap:40px;align-items:start}
+@media (max-width:900px){.wrap{grid-template-columns:minmax(0,1fr);gap:24px}}
+.intro{min-width:0;display:flex;flex-direction:column;gap:20px}
+.kicker{font-size:12px;letter-spacing:.12em;text-transform:uppercase;color:var(--muted);display:flex;align-items:center;gap:10px}
+.kicker::before{content:"";width:28px;height:3px;background:var(--accent);border-radius:2px}
+h1{font-family:var(--display);font-weight:700;font-size:clamp(26px,4vw,38px);line-height:1.12;margin:0;text-wrap:balance;letter-spacing:-.01em}
+h2{font-family:var(--display);font-weight:500;font-size:clamp(20px,2.6vw,26px);margin:0;text-wrap:balance}
+.lead{margin:0;color:var(--muted);max-width:60ch}
+.scen{display:flex;flex-direction:column;gap:7px}
+.lbl{font-size:12px;letter-spacing:.1em;text-transform:uppercase;color:var(--muted);margin:0 0 3px;font-weight:600}
+.sbtn{all:unset;box-sizing:border-box;cursor:pointer;display:grid;grid-template-columns:auto minmax(0,1fr);gap:12px;align-items:start;
+  padding:10px 14px;border-radius:12px;background:var(--panel);border:1px solid var(--line);transition:border-color .15s}
+.sbtn:hover{border-color:var(--blue)}
+.sbtn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.sbtn[aria-pressed="true"]{border-color:var(--blue);box-shadow:inset 3px 0 0 var(--blue)}
+.sbtn .n{font-family:var(--display);font-size:13px;color:var(--blue);width:22px;padding-top:1px}
+.sbtn b{display:block;font-weight:600}
+.sbtn span{display:block;color:var(--muted);font-size:13.5px}
+.sbtn.fresh .n{color:var(--accent)}
+.tag{display:inline-block;font-style:normal;font-size:11px;font-weight:600;letter-spacing:.04em;padding:1px 7px;border-radius:999px;margin-left:4px;vertical-align:2px}
+.t-code{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.t-ai{background:color-mix(in srgb,var(--blue) 15%,transparent);color:var(--blue)}
+.t-human{background:color-mix(in srgb,var(--accent) 14%,transparent);color:var(--accent)}
+.legend{display:flex;flex-wrap:wrap;gap:8px 16px;font-size:13px;color:var(--muted)}
+.note{font-size:12.5px;color:var(--muted);border-top:1px solid var(--line);padding-top:14px;margin:0}
+
+/* phone */
+.phone{position:sticky;top:20px;background:var(--panel);border:1px solid var(--line);border-radius:28px;overflow:hidden;
+  box-shadow:0 18px 50px -24px rgba(13,26,41,.35);display:flex;flex-direction:column;height:min(780px,calc(100vh - 40px));min-height:580px}
+@media (max-width:900px){.phone{position:relative;top:0;height:660px;border-radius:20px}}
+.bar{background:var(--navy);color:var(--navy-ink);padding:12px 14px;display:flex;align-items:center;gap:12px}
+.ava{width:38px;height:38px;border-radius:50%;background:var(--accent);display:grid;place-items:center;flex:none;
+  font-family:var(--display);font-size:11px;color:#fff;position:relative;overflow:hidden}
+.ava::after{content:"";position:absolute;left:0;right:0;top:50%;height:2px;background:rgba(255,255,255,.55)}
+.bar .who{min-width:0}
+.bar .who b{display:block;font-weight:600;font-size:15px}
+.bar .who span{font-size:12.5px;opacity:.75}
+.tabs{display:grid;grid-template-columns:repeat(3,1fr);background:var(--navy);border-top:1px solid rgba(255,255,255,.08)}
+.tab{all:unset;cursor:pointer;text-align:center;padding:9px 4px;font-size:13px;color:var(--navy-ink);opacity:.65;border-bottom:3px solid transparent}
+.tab[aria-selected="true"]{opacity:1;border-bottom-color:var(--accent)}
+.tab:focus-visible{outline:2px solid var(--navy-ink);outline-offset:-4px}
+.badge{display:inline-grid;place-items:center;min-width:18px;height:18px;padding:0 5px;border-radius:9px;background:var(--accent);color:#fff;font-size:11px;font-weight:700;margin-left:5px}
+.view{flex:1;overflow-y:auto;min-height:0}
+.log{padding:14px 12px 18px;display:flex;flex-direction:column;gap:8px;
+  background:var(--chat);background-image:repeating-linear-gradient(115deg,transparent 0 46px,color-mix(in srgb,var(--blue) 5%,transparent) 46px 47px)}
+.msg{max-width:88%;padding:8px 11px 6px;border-radius:14px;background:var(--in);box-shadow:0 1px 1px rgba(0,0,0,.06);font-size:14.5px;line-height:1.45;animation:pop .22s ease-out both;overflow-wrap:anywhere}
+.msg.user{align-self:flex-end;background:var(--out);border-bottom-right-radius:4px}
+.msg.bot{align-self:flex-start;border-bottom-left-radius:4px}
+.msg.admin{align-self:flex-start;border-bottom-left-radius:4px;border-left:3px solid var(--ok)}
+.msg.push{align-self:flex-start;border-left:3px solid var(--accent)}
+.msg .src{display:block;font-size:11.5px;color:var(--muted);margin-top:4px}
+.msg .time{float:right;font-size:11px;color:var(--muted);margin:6px 0 0 10px}
+.msg ul{margin:4px 0;padding-left:18px}
+.msg .h{display:block;font-size:12px;font-weight:700;margin-bottom:2px}
+.msg.admin .h{color:var(--ok)} .msg.push .h{color:var(--accent)}
+.sched{display:grid;grid-template-columns:auto auto minmax(0,1fr);gap:2px 10px;margin:6px 0 2px;font-variant-numeric:tabular-nums;font-size:13.5px}
+.sched .x{color:var(--accent);font-weight:600}
+.sched s{color:var(--muted)}
+.kb{display:grid;grid-template-columns:1fr 1fr;gap:5px;align-self:flex-start;width:88%;animation:pop .22s ease-out both}
+.kb button{all:unset;cursor:pointer;text-align:center;font-size:13px;padding:7px 6px;border-radius:9px;background:color-mix(in srgb,var(--panel) 78%,transparent);color:var(--blue);font-weight:500}
+.kb button:focus-visible{outline:2px solid var(--blue)}
+.kb .wide{grid-column:1/-1}
+.sys{align-self:center;font-size:12px;color:var(--sys);padding:2px 10px;text-align:center}
+.typing{align-self:flex-start;background:var(--in);border-radius:14px;padding:10px 12px;display:flex;gap:4px;align-items:center;font-size:12px;color:var(--muted)}
+.typing i{width:6px;height:6px;border-radius:50%;background:var(--muted);animation:dot 1s infinite}
+.typing i:nth-child(2){animation-delay:.15s}.typing i:nth-child(3){animation-delay:.3s}
+.compose{display:flex;gap:8px;align-items:center;padding:10px 12px;border-top:1px solid var(--line);background:var(--panel)}
+.compose input{flex:1;min-width:0;padding:9px 13px;border-radius:18px;background:var(--chip);border:1px solid transparent;font-size:14.5px}
+.compose input:focus{outline:none;border-color:var(--blue)}
+.ibtn{all:unset;cursor:pointer;flex:none;height:36px;padding:0 12px;border-radius:18px;display:grid;place-items:center;font-size:13px;font-weight:600}
+.ibtn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+.ibtn.app{background:var(--chip);color:var(--blue)}
+.ibtn.send{background:var(--blue);color:#fff;width:36px;padding:0}
+.ibtn[disabled]{opacity:.45;cursor:default}
+.aistate{font-size:11.5px;color:var(--muted);padding:0 14px 8px;background:var(--panel);display:flex;gap:6px;align-items:center}
+.aistate::before{content:"";width:7px;height:7px;border-radius:50%;background:var(--warn)}
+.aistate.on::before{background:var(--ok)}
+
+/* admin */
+.card{background:var(--in);border-radius:12px;padding:10px 12px;font-size:13.5px;border-left:4px solid var(--warn);animation:pop .22s ease-out both;display:flex;flex-direction:column;gap:6px}
+.card.urgent{border-left-color:var(--accent)} .card.new{border-left-color:var(--blue)} .card.done{border-left-color:var(--ok)}
+.card .hd{display:flex;justify-content:space-between;gap:8px;align-items:baseline;flex-wrap:wrap}
+.card .hd b{font-weight:700;font-size:12px;letter-spacing:.06em;text-transform:uppercase;color:var(--warn)}
+.card.urgent .hd b{color:var(--accent)} .card.new .hd b{color:var(--blue)} .card.done .hd b{color:var(--ok)}
+.card .hd span{font-size:11.5px;color:var(--muted);font-variant-numeric:tabular-nums}
+.card .who{color:var(--muted);font-size:12.5px}
+.card q{display:block;quotes:none;padding:6px 9px;background:var(--chip);border-radius:8px}
+.card .acts{display:flex;gap:6px;flex-wrap:wrap}
+.card .acts span{font-size:12px;padding:4px 9px;border-radius:7px;border:1px solid var(--line);color:var(--blue)}
+.card .reply{font-size:13px;color:var(--ok)}
+.tool{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:9px}
+.tool .t{font-weight:700;font-size:13.5px}
+.tool .row{display:grid;grid-template-columns:1fr 1fr;gap:8px}
+.tool label{display:flex;flex-direction:column;gap:3px;font-size:11.5px;color:var(--muted);min-width:0}
+.tool select,.tool input{padding:7px 8px;border-radius:8px;border:1px solid var(--line);background:var(--chip);font-size:13.5px;min-width:0;width:100%}
+.btn{all:unset;box-sizing:border-box;cursor:pointer;text-align:center;padding:9px 12px;border-radius:9px;background:var(--accent);color:#fff;font-weight:600;font-size:13.5px}
+.btn:focus-visible{outline:2px solid var(--blue);outline-offset:2px}
+
+/* mini app */
+.app{padding:14px;display:flex;flex-direction:column;gap:12px;background:var(--bg)}
+.kid{display:flex;align-items:center;gap:12px;background:var(--panel);border-radius:14px;padding:12px;border:1px solid var(--line)}
+.kid .num{width:44px;height:44px;border-radius:12px;background:var(--navy);color:var(--navy-ink);display:grid;place-items:center;font-family:var(--display);font-size:16px;flex:none}
+.kid b{display:block}.kid span{font-size:12.5px;color:var(--muted)}
+.seg{display:grid;grid-template-columns:repeat(3,1fr);background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:3px;gap:3px}
+.seg button{all:unset;cursor:pointer;text-align:center;font-size:13px;padding:6px;border-radius:7px;color:var(--muted)}
+.seg button[aria-pressed="true"]{background:var(--navy);color:var(--navy-ink)}
+.seg button:focus-visible{outline:2px solid var(--blue)}
+.days{display:flex;flex-direction:column;gap:7px}
+.day{display:grid;grid-template-columns:52px minmax(0,1fr) auto;gap:10px;align-items:center;background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:10px 12px}
+.day .d{font-family:var(--display);font-size:13px;line-height:1.2;color:var(--blue)}
+.day .d small{display:block;font-family:var(--body);font-size:11px;color:var(--muted)}
+.day .w{font-size:13px;color:var(--muted)}
+.day .tm{font-variant-numeric:tabular-nums;font-weight:700;font-size:15px}
+.day.moved{border-color:color-mix(in srgb,var(--accent) 55%,var(--line))}
+.day.moved .tm{color:var(--accent)}
+.day .old{display:block;font-size:11.5px;color:var(--muted);text-decoration:line-through;font-weight:400;text-align:right}
+.pill{display:inline-block;font-size:11px;font-weight:700;padding:2px 8px;border-radius:999px}
+.p-ok{background:color-mix(in srgb,var(--ok) 15%,transparent);color:var(--ok)}
+.p-wait{background:color-mix(in srgb,var(--warn) 16%,transparent);color:var(--warn)}
+.pay{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px}
+.pay .r{display:flex;justify-content:space-between;align-items:center;gap:8px;font-size:14px}
+.pay .big{font-family:var(--display);font-size:22px}
+.match{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:12px;display:flex;flex-direction:column;gap:8px;font-size:13.5px}
+.score{display:grid;grid-template-columns:1fr auto 1fr;align-items:center;gap:8px;text-align:center}
+.score b{font-family:var(--display);font-size:26px;font-variant-numeric:tabular-nums}
+.score span{font-size:12.5px;color:var(--muted)}
+.mom{display:grid;grid-template-columns:48px minmax(0,1fr);gap:8px;font-size:13px}
+.mom code{font-family:var(--body);font-variant-numeric:tabular-nums;color:var(--blue);font-weight:700}
+.vid{aspect-ratio:16/9;max-width:100%;border-radius:10px;background:linear-gradient(160deg,#18385a,#0b1a2a);position:relative;overflow:hidden;display:grid;place-items:center;color:#fff;font-size:12.5px}
+.vid::before{content:"";position:absolute;inset:auto 0 50% 0;height:2px;background:rgba(211,36,59,.8)}
+.vid::after{content:"";position:absolute;left:30%;right:30%;top:0;bottom:0;border-left:2px solid rgba(80,140,220,.55);border-right:2px solid rgba(80,140,220,.55)}
+.vid span{position:relative;z-index:1;background:rgba(0,0,0,.45);padding:4px 10px;border-radius:999px}
+
+/* dashboard */
+.dash{max-width:1120px;margin:56px auto 0;display:flex;flex-direction:column;gap:18px}
+.dash .top{display:flex;justify-content:space-between;align-items:end;gap:12px;flex-wrap:wrap}
+.dash .top p{margin:4px 0 0;color:var(--muted);max-width:62ch}
+.kpis{display:grid;grid-template-columns:repeat(4,minmax(0,1fr));gap:12px}
+@media (max-width:760px){.kpis{grid-template-columns:repeat(2,minmax(0,1fr))}}
+.kpi{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:14px;display:flex;flex-direction:column;gap:2px;min-width:0}
+.kpi span{font-size:12.5px;color:var(--muted)}
+.kpi b{font-family:var(--display);font-size:clamp(22px,3vw,30px);font-weight:500;font-variant-numeric:tabular-nums}
+.kpi small{font-size:12px;color:var(--ok)}
+.grid2{display:grid;grid-template-columns:minmax(0,1.2fr) minmax(0,1fr);gap:12px}
+@media (max-width:760px){.grid2{grid-template-columns:minmax(0,1fr)}}
+.box{background:var(--panel);border:1px solid var(--line);border-radius:14px;padding:16px;min-width:0;display:flex;flex-direction:column;gap:12px}
+.box h3{margin:0;font-size:14px;font-weight:700}
+.bars{display:flex;flex-direction:column;gap:8px}
+.brow{display:grid;grid-template-columns:150px minmax(0,1fr) 44px;gap:10px;align-items:center;font-size:13.5px}
+@media (max-width:480px){.brow{grid-template-columns:110px minmax(0,1fr) 40px}}
+.track{height:10px;background:var(--chip);border-radius:5px;overflow:hidden;display:flex}
+.track i{display:block;height:100%}
+.track .b{background:var(--blue)} .track .hm{background:var(--accent)}
+.brow em{font-style:normal;text-align:right;font-variant-numeric:tabular-nums;color:var(--muted)}
+.keyl{display:flex;gap:14px;font-size:12px;color:var(--muted)}
+.keyl i{display:inline-block;width:10px;height:10px;border-radius:3px;margin-right:5px;vertical-align:-1px}
+.unk{display:flex;flex-direction:column;gap:8px;margin:0;padding:0;list-style:none}
+.unk li{display:flex;justify-content:space-between;gap:10px;align-items:center;font-size:13.5px;padding:8px 10px;background:var(--chip);border-radius:9px}
+.unk li span{color:var(--muted);font-size:12px;white-space:nowrap}
+.schools{width:100%;border-collapse:collapse;font-size:13.5px}
+.schools th{text-align:left;font-size:11.5px;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:600;padding:6px 8px;border-bottom:1px solid var(--line)}
+.schools td{padding:9px 8px;border-bottom:1px solid var(--line);font-variant-numeric:tabular-nums}
+.schools tr.next td{color:var(--muted);border-bottom:0;font-style:italic}
+.scroll{overflow-x:auto}
+svg text{fill:var(--muted);font-family:var(--body);font-size:11px}
+
+@keyframes pop{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
+@keyframes dot{0%,60%,100%{opacity:.3}30%{opacity:1}}
+@media (prefers-reduced-motion:reduce){.msg,.kb,.card{animation:none}.typing i{animation:none}}
+</style></head><body>
+<main class="wrap">
+  <section class="intro">
+    <div class="kicker">Демо · пилот в школе ШРС</div>
+    <h1>Помощник для родителей хоккейных школ</h1>
+    <p class="lead">Напишите в телефоне справа любой вопрос, как написал бы родитель, или нажмите сценарий. Расписание и оплату отдаёт код из таблиц школы, свободные вопросы бот ищет в базе ответов школы, всё спорное и срочное уходит администратору. Ниже — панель, которую видит руководитель школы и федерация.</p>
+
+    <div class="scen" role="group" aria-label="Сценарии">
+      <p class="lbl">Родитель спрашивает</p>
+      <button class="sbtn" data-s="schedule" aria-pressed="true"><span class="n">1</span><div><b>Расписание моего ребёнка <em class="tag t-code">код</em></b><span>Неделя с учётом переноса льда</span></div></button>
+      <button class="sbtn" data-s="pay" aria-pressed="false"><span class="n">2</span><div><b>Оплачен ли октябрь <em class="tag t-code">код</em></b><span>Статус из реестра, сроки и реквизиты</span></div></button>
+      <button class="sbtn" data-s="gear" aria-pressed="false"><span class="n">3</span><div><b>Вопрос своими словами <em class="tag t-ai">поиск</em></b><span>Экипировка для 5 лет — ответ только по базе школы</span></div></button>
+      <button class="sbtn" data-s="injury" aria-pressed="false"><span class="n">4</span><div><b>Травма <em class="tag t-human">человек</em></b><span>Без медицинских советов, срочная карточка</span></div></button>
+      <button class="sbtn" data-s="unknown" aria-pressed="false"><span class="n">5</span><div><b>«Не знаю» <em class="tag t-human">человек</em></b><span>Ответа нет в базе — бот не выдумывает цену</span></div></button>
+      <button class="sbtn" data-s="newbie" aria-pressed="false"><span class="n">6</span><div><b>Запись новичка <em class="tag t-ai">поиск</em><em class="tag t-human">человек</em></b><span>Условия и заявка, без обещания места</span></div></button>
+      <button class="sbtn" data-s="privacy" aria-pressed="false"><span class="n">7</span><div><b>Чужие данные <em class="tag t-code">код</em></b><span>Телефон другого родителя — отказ</span></div></button>
+      <p class="lbl" style="margin-top:8px">Школа пишет первой</p>
+      <button class="sbtn fresh" data-s="move" aria-pressed="false"><span class="n">8</span><div><b>Перенос тренировки <em class="tag t-code">код</em></b><span>Администратор меняет время — бот сам пишет всей группе</span></div></button>
+      <button class="sbtn fresh" data-s="match" aria-pressed="false"><span class="n">9</span><div><b>Разбор матча <em class="tag t-ai">доп. услуга</em></b><span>После игры родителям приходит короткий разбор с моментами</span></div></button>
+      <button class="sbtn fresh" data-s="app" aria-pressed="false"><span class="n">10</span><div><b>Приложение родителя <em class="tag t-code">код</em></b><span>Календарь, оплата и матчи ребёнка внутри Telegram</span></div></button>
+    </div>
+
+    <div class="legend">
+      <span><em class="tag t-code">код</em> точные данные из таблиц</span>
+      <span><em class="tag t-ai">поиск</em> находит ответ в базе школы</span>
+      <span><em class="tag t-human">человек</em> передача администратору</span>
+    </div>
+    <p class="note">Имена, группы, цены, даты и статистика в демо условные. В рабочей версии данные берутся из таблиц школы, которые ведёт администратор.</p>
+  </section>
+
+  <section class="phone" aria-label="Макет Telegram">
+    <div class="bar">
+      <div class="ava" aria-hidden="true">ШРС</div>
+      <div class="who"><b id="chatTitle">Помощник ШРС</b><span id="chatSub">бот школы · отвечает 24/7</span></div>
+    </div>
+    <div class="tabs" role="tablist">
+      <button class="tab" role="tab" data-v="parent" aria-selected="true">Родитель<span class="badge" id="bParent" hidden>0</span></button>
+      <button class="tab" role="tab" data-v="app" aria-selected="false">Приложение</button>
+      <button class="tab" role="tab" data-v="admin" aria-selected="false">Админ<span class="badge" id="bAdmin" hidden>0</span></button>
+    </div>
+
+    <div class="view log" id="vParent" aria-live="polite"></div>
+    <div class="view app" id="vApp" hidden></div>
+    <div class="view log" id="vAdmin" hidden></div>
+
+    <form class="compose" id="compose" autocomplete="off">
+      <button type="button" class="ibtn app" id="openApp" title="Открыть приложение">Приложение</button>
+      <input id="ask" type="text" placeholder="Напишите вопрос как родитель…" aria-label="Вопрос родителя">
+      <button type="submit" class="ibtn send" id="sendBtn" aria-label="Отправить">➤</button>
+    </form>
+    <div class="aistate" id="aiState">Ответы только из базы школы, без генерации ИИ</div>
+  </section>
+</main>
+
+<section class="dash" aria-labelledby="dashTitle">
+  <div class="top">
+    <div>
+      <div class="kicker">Для руководителя школы и федерации</div>
+      <h2 id="dashTitle" style="margin-top:8px">Панель «Помощника» за октябрь</h2>
+      <p>Сколько вопросов родителей закрыл бот, о чём спрашивают и чего не хватает в базе знаний. Цифры условные — так будет выглядеть отчёт после месяца пилота.</p>
+    </div>
+  </div>
+  <div class="kpis">
+    <div class="kpi"><span>Вопросов от родителей</span><b>1 840</b><small>около 6 на семью</small></div>
+    <div class="kpi"><span>Закрыл бот сам</span><b>68%</b><small>+16 п.п. с первой недели</small></div>
+    <div class="kpi"><span>Ответ администратора</span><b>14 мин</b><small>медиана по передачам</small></div>
+    <div class="kpi"><span>Срочных обращений</span><b>6</b><small>все приняты за 5 минут</small></div>
+  </div>
+  <div class="grid2">
+    <div class="box">
+      <h3>О чём спрашивают родители</h3>
+      <div class="keyl"><span><i style="background:var(--blue)"></i>закрыл бот</span><span><i style="background:var(--accent)"></i>передано человеку</span></div>
+      <div class="bars" id="bars"></div>
+    </div>
+    <div class="box">
+      <h3>Доля вопросов, закрытых ботом, по неделям</h3>
+      <div class="scroll"><svg id="trend" viewBox="0 0 360 170" width="100%" role="img" aria-label="Доля вопросов, закрытых ботом: 52, 61, 66, 68 процентов по неделям"></svg></div>
+      <h3>Бот не знал ответа — добавить в базу</h3>
+      <ul class="unk">
+        <li>Сколько стоит индивидуальная тренировка?<span>14 раз</span></li>
+        <li>Будет ли тренировка на осенних каникулах?<span>9 раз</span></li>
+        <li>Можно ли перейти в группу на год старше?<span>6 раз</span></li>
+      </ul>
+    </div>
+  </div>
+  <div class="box">
+    <h3>Школы федерации</h3>
+    <div class="scroll">
+      <table class="schools">
+        <thead><tr><th>Школа</th><th>Семей</th><th>Вопросов</th><th>Закрыл бот</th><th>Статус</th></tr></thead>
+        <tbody>
+          <tr><td>ШРС</td><td>300</td><td>1 840</td><td>68%</td><td><span class="pill p-ok">пилот работает</span></td></tr>
+          <tr class="next"><td>Следующая школа</td><td>—</td><td>—</td><td>—</td><td>подключение по шаблону за 2–3 дня</td></tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</section>
+
+<script>
+const reduce = matchMedia('(prefers-reduced-motion: reduce)').matches;
+const $ = id => document.getElementById(id);
+const vP=$('vParent'), vA=$('vAdmin'), vApp=$('vApp');
+let run=0, view='parent', unread={parent:0,admin:0}, clock=19*60+12, cardNo=214, sample=null, busy=false;
+const tm=()=>{clock+=1;return String(Math.floor(clock/60)%24).padStart(2,'0')+':'+String(clock%60).padStart(2,'0')};
+const sleep=ms=>new Promise(r=>setTimeout(r,reduce?0:ms));
+const esc=s=>String(s).replace(/[&<>"]/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
+
+/* ---------- данные школы (условные) ---------- */
+const KID={name:'Миша',group:'2017',coach:'Сергей Викторович'};
+const WEEK=[
+  {id:'tue',d:'Вт',n:'21 окт',t:'18:30',place:'Лёд · арена № 2'},
+  {id:'thu',d:'Чт',n:'23 окт',t:'17:00',old:'18:30',place:'Лёд · арена № 1'},
+  {id:'sat',d:'Сб',n:'25 окт',t:'10:00',place:'ОФП · зал'}
+];
+const PAY={oct:'оплачено 3 октября', nov:'до 5 ноября', price:'110 BYN'};
+const FAQ=[
+ {id:'PAY-01',q:'Сроки и способ оплаты',a:'Абонемент на месяц оплачивается до 5-го числа через ЕРИП: «Спорт» → «ШРС» → номер договора.'},
+ {id:'PAY-02',q:'Цены абонемента',a:'Абонемент на месяц: группы 4–6 лет — 90 BYN, 7–12 лет — 110 BYN, 13–18 лет — 130 BYN.'},
+ {id:'PAY-03',q:'Перерасчёт при болезни',a:'Перерасчёт делается при пропуске от 2 недель подряд по болезни, нужна справка. Решение по конкретному случаю принимает администратор.'},
+ {id:'NEW-01',q:'Запись новичков, возраст, пробное',a:'Принимаем детей с 4 лет. Первое занятие пробное и бесплатное, экипировку дают в прокат. Группу и время подбирает администратор.'},
+ {id:'GEAR-01',q:'Экипировка для 4–6 лет',a:'Нужны шлем с маской, перчатки, налокотники, коньки, термобельё и тонкие носки. Полную защиту докупают постепенно.'},
+ {id:'GEAR-02',q:'Прокат',a:'Прокат коньков и шлема есть у администратора, первые 2 занятия бесплатно.'},
+ {id:'GEAR-03',q:'Заточка коньков',a:'Заточка на арене № 1 у мастерской, 8 BYN, примерно раз в 2–3 недели.'},
+ {id:'GEAR-04',q:'Игровая форма',a:'Игровую форму школы заказывают у администратора, 95 BYN за комплект, срок 3 недели.'},
+ {id:'RULE-01',q:'Когда приходить',a:'Приходить за 30 минут до начала: переодеться и выйти на лёд вовремя.'},
+ {id:'RULE-02',q:'Что взять с собой',a:'Бутылка воды с именем, сменная обувь, полотенце, экипировка в сумке, подписанные вещи.'},
+ {id:'RULE-03',q:'Родители на тренировке',a:'Родители смотрят тренировку с трибуны. В раздевалку малышей 4–6 лет помогает одевать один родитель.'},
+ {id:'RULE-04',q:'Ребёнок заболел — как сообщить',a:'Сообщите тренеру группы или администратору до 12:00 дня тренировки. После болезни нужна справка для допуска.'},
+ {id:'PLACE-01',q:'Адреса арен',a:'Арена № 1 и арена № 2 — адреса и схема проезда есть в приложении, вкладка «Неделя».'},
+ {id:'CONT-01',q:'Контакты администратора',a:'Администратор на связи с 9:00 до 20:00 через этого бота. Срочно во время тренировки — по телефону дежурного.'},
+ {id:'EVT-01',q:'Турниры',a:'Ближайший турнир группы 2017 — 8–9 ноября в Минске, взнос 40 BYN, запись у тренера до 1 ноября.'}
+];
+
+/* ---------- отрисовка ---------- */
+function el(cls,html){const d=document.createElement('div');d.className=cls;d.innerHTML=html;return d}
+function down(l){l.scrollTop=l.scrollHeight}
+function bump(v){if(view!==v){unread[v]++;const b=$(v==='parent'?'bParent':'bAdmin');b.textContent=unread[v];b.hidden=false}}
+function say(cls,html){const m=el('msg '+cls,html+`<span class="time">${tm()}</span>`);vP.appendChild(m);down(vP);if(cls!=='user')bump('parent');return m}
+function kb(btns){const k=el('kb','');btns.forEach((b,i)=>{const x=document.createElement('button');x.type='button';x.textContent=b.t;if(btns.length%2&&i===btns.length-1)x.className='wide';
+  x.onclick=b.go?b.go:()=>{say('user',esc(b.t));say('bot','В демо эта кнопка не подключена. В рабочем боте здесь будет ответ из таблицы школы.')};k.appendChild(x)});vP.appendChild(k);down(vP)}
+function schedHTML(){return `<div class="sched">${WEEK.map(w=>w.old?`<span>${w.d} ${w.n.split(' ')[0]}</span><span class="x">${w.t}</span><span class="x">${w.place.toLowerCase()} · перенос</span><span></span><s>${w.old}</s><s>было по плану</s>`:`<span>${w.d} ${w.n.split(' ')[0]}</span><span>${w.t}</span><span>${w.place.toLowerCase()}</span>`).join('')}</div>`}
+function scheduleMsg(){say('bot',`Тренировки Миши (группа ${KID.group}) на неделе 20–26 октября:${schedHTML()}Приходите за 30 минут до начала.<span class="src">Код · месячное расписание школы</span>`);kb([{t:'Открыть в приложении',go:()=>{showApp('week')}},{t:'Где арена № 1?'}])}
+function payMsg(){say('bot',`Да, октябрь за Мишу ${PAY.oct}.<br>Ноябрь нужно оплатить ${PAY.nov} через ЕРИП: «Спорт» → «ШРС» → номер договора. Сумма ${PAY.price}.<span class="src">Код · реестр оплат школы</span>`);kb([{t:'История оплат',go:()=>showApp('pay')},{t:'Перерасчёт за болезнь'}])}
+function card(c){
+  const d=el('card '+(c.cls||''),`<div class="hd"><b>${c.tag}</b><span>№ ${++cardNo} · ${tm()}</span></div><div class="who">${c.who||'Анна, мама '+KID.name+' · группа '+KID.group}</div><q>${esc(c.q)}</q><div class="who">${c.bot}</div><div class="acts">${(c.acts||['Взял','Ответить']).map(a=>`<span>${a}</span>`).join('')}</div>`);
+  vA.appendChild(d);down(vA);bump('admin');return d}
+async function typing(label){const t=el('typing','<i></i><i></i><i></i>'+(label?`<span>&nbsp;${label}</span>`:''));vP.appendChild(t);down(vP);return t}
+
+/* ---------- экраны телефона ---------- */
+const TITLES={parent:['Помощник ШРС','бот школы · отвечает 24/7'],app:['Приложение ШРС','внутри Telegram · без установки'],admin:['Рабочий чат ШРС','администратор + бот · обращения родителей']};
+function setView(v){view=v;document.querySelectorAll('.tab').forEach(t=>t.setAttribute('aria-selected',t.dataset.v===v));
+  vP.hidden=v!=='parent';vA.hidden=v!=='admin';vApp.hidden=v!=='app';$('compose').hidden=v!=='parent';$('aiState').hidden=v!=='parent';
+  [$('chatTitle').textContent,$('chatSub').textContent]=TITLES[v];
+  if(v!=='app'){unread[v]=0;$(v==='parent'?'bParent':'bAdmin').hidden=true;down(v==='parent'?vP:vA)}}
+document.querySelectorAll('.tab').forEach(t=>t.onclick=()=>{if(t.dataset.v==='app')showApp(appTab);else setView(t.dataset.v)});
+$('openApp').onclick=()=>showApp('week');
+
+/* ---------- приложение родителя ---------- */
+let appTab='week';
+function showApp(tab){appTab=tab;renderApp();setView('app');vApp.scrollTop=0}
+function renderApp(){
+  const seg=['week','pay','match'].map((k,i)=>`<button type="button" data-k="${k}" aria-pressed="${appTab===k}">${['Неделя','Оплата','Матчи'][i]}</button>`).join('');
+  let body='';
+  if(appTab==='week') body=`<div class="days">${WEEK.map(w=>`<div class="day${w.old?' moved':''}"><div class="d">${w.d}<small>${w.n}</small></div><div><div>${w.place}</div><div class="w">${w.old?'Перенос, проверьте время':'Тренер: '+KID.coach}</div></div><div class="tm">${w.t}${w.old?`<span class="old">${w.old}</span>`:''}</div></div>`).join('')}</div>
+   <div class="pay"><div class="r"><span>Арена № 1</span><span class="w" style="color:var(--muted);font-size:12.5px">схема проезда</span></div><div class="r"><span>Арена № 2</span><span style="color:var(--muted);font-size:12.5px">схема проезда</span></div></div>`;
+  if(appTab==='pay') body=`<div class="pay"><span style="font-size:12.5px;color:var(--muted)">Ноябрь · абонемент группы ${KID.group}</span><div class="r"><span class="big">${PAY.price}</span><span class="pill p-wait">${PAY.nov}</span></div><div style="font-size:13px;color:var(--muted)">ЕРИП: «Спорт» → «ШРС» → номер договора</div></div>
+   <div class="pay">${[['Октябрь','оплачено 3.10'],['Сентябрь','оплачено 4.09'],['Август','каникулы']].map(r=>`<div class="r"><span>${r[0]}</span><span class="pill ${r[1].startsWith('опл')?'p-ok':'p-wait'}">${r[1]}</span></div>`).join('')}</div>`;
+  if(appTab==='match') body=`<div class="match"><div class="score"><span>ШРС-2017</span><b>4 : 3</b><span>«Северяне»</span></div><div style="text-align:center;font-size:12px;color:var(--muted)">18 октября · товарищеский матч</div>
+   <div class="vid"><span>Видео с трибуны · YouTube</span></div>
+   <b style="font-size:13px">Ключевые моменты</b>
+   <div class="mom"><code>07:12</code><span>Гол после розыгрыша в большинстве — хорошая передача с синей линии</span></div>
+   <div class="mom"><code>21:40</code><span>Пропущенная шайба: поздний возврат в оборону после потери</span></div>
+   <div class="mom"><code>38:05</code><span>Победный гол за 2 минуты до конца — Миша начал атаку из своей зоны</span></div>
+   <b style="font-size:13px">Над чем работаем на неделе</b><span>Возврат в оборону после потери шайбы и игра в меньшинстве.</span>
+   <span style="font-size:11.5px;color:var(--muted)">Разбор подготовлен ИИ по видео, проверен тренером</span></div>`;
+  vApp.innerHTML=`<div class="kid"><div class="num">17</div><div><b>${KID.name}</b><span>Группа ${KID.group} · тренер ${KID.coach}</span></div></div><div class="seg" role="group" aria-label="Разделы">${seg}</div>${body}`;
+  vApp.querySelectorAll('.seg button').forEach(b=>b.onclick=()=>{appTab=b.dataset.k;renderApp()});
+}
+
+/* ---------- админ: перенос тренировки ---------- */
+function renderAdminTool(){
+  const t=el('tool',`<div class="t">Изменить расписание группы</div>
+   <div class="row"><label for="mvGroup">Группа<select id="mvGroup"><option>2017</option><option>2016</option><option>2015</option></select></label>
+   <label for="mvDay">Тренировка<select id="mvDay">${WEEK.map(w=>`<option value="${w.id}">${w.d} ${w.n} · ${w.t}</option>`).join('')}</select></label></div>
+   <div class="row"><label for="mvTime">Новое время<input id="mvTime" type="time" value="11:00"></label>
+   <label for="mvPlace">Где<select id="mvPlace"><option>Лёд · арена № 1</option><option>Лёд · арена № 2</option><option>ОФП · зал</option></select></label></div>
+   <button type="button" class="btn" id="mvGo">Сохранить и разослать группе</button>
+   <div class="who" style="color:var(--muted);font-size:12px">В рабочей версии это строка в Google Таблице: бот сам замечает изменение.</div>`);
+  vA.appendChild(t);$('mvDay').value='sat';$('mvPlace').value='ОФП · зал';
+  $('mvGo').onclick=()=>moveSession($('mvDay').value,$('mvTime').value,$('mvPlace').value,$('mvGroup').value);
+}
+async function moveSession(id,time,place,group){
+  const w=WEEK.find(x=>x.id===id); if(!w||!time) return;
+  if(w.t===time&&w.place===place){vA.appendChild(el('sys','Время не изменилось — рассылка не нужна'));down(vA);return}
+  if(!w.old) w.old=w.t; w.t=time; w.place=place; if(w.old===w.t) delete w.old;
+  [...$('mvDay').options].forEach(o=>{const x=WEEK.find(q=>q.id===o.value);o.textContent=`${x.d} ${x.n} · ${x.t}`});
+  vA.appendChild(el('sys',`${tm()} · Расписание обновлено. Бот отправил уведомление 28 семьям группы ${group}`));down(vA);
+  renderApp();
+  await sleep(900);
+  say('push',`<span class="h">Изменение в расписании</span>Группа ${group}: тренировка ${({Вт:'во вторник',Чт:'в четверг',Сб:'в субботу'})[w.d]}, ${w.n}, теперь в <b>${w.t}</b>${w.old?` (было ${w.old})`:''}. ${w.place}.`);
+  kb([{t:'Понятно 👍',go:()=>{say('user','Понятно 👍')}},{t:'Открыть неделю',go:()=>showApp('week')}]);
+}
+
+/* ---------- сценарии ---------- */
+const S={
+ schedule:async()=>{say('user','Когда у Миши тренировки на этой неделе?');await sleep(600);scheduleMsg()},
+ pay:async()=>{say('user','Оплачен ли у нас октябрь?');await sleep(600);payMsg()},
+ gear:async my=>{say('user','что купить сыну 5 лет на первую тренировку? есть ли прокат');const t=await typing();await sleep(1200);t.remove();if(my!==run)return;
+   say('bot',`Для первой тренировки в группе 4–6 лет нужно:<ul><li>шлем с маской</li><li>перчатки и налокотники</li><li>коньки (можно взять в прокат)</li><li>термобельё и тонкие носки</li></ul>Прокат коньков и шлема есть у администратора, первые 2 занятия бесплатно.<span class="src">Поиск по базе школы: GEAR-01, GEAR-02</span>`);kb([{t:'Что взять с собой'},{t:'Где купить'}])},
+ injury:async()=>{say('user','Сын упал на тренировке, болит рука. Можно завтра на лёд?');await sleep(600);routeHuman('health','Сын упал на тренировке, болит рука. Можно завтра на лёд?')},
+ unknown:async my=>{const q='Сколько стоит индивидуальная тренировка с тренером?';say('user',q);const t=await typing();await sleep(1200);t.remove();if(my!==run)return;
+   const c=routeHuman('none',q);await sleep(1800);if(my!==run)return;vP.appendChild(el('sys','через 20 минут'));
+   say('admin','<span class="h">Ответ администратора</span>Индивидуальная тренировка — 60 BYN за час, записаться можно у тренера группы. Подберём удобное время.');
+   c.classList.add('done');c.querySelector('.hd b').textContent='Закрыто';c.insertAdjacentHTML('beforeend','<div class="reply">✓ Ответ отправлен родителю · вопрос добавлен в базу</div>')},
+ newbie:async my=>{say('user','Здравствуйте! Хотим попробовать хоккей, дочке 4 года');const t=await typing();await sleep(1200);t.remove();if(my!==run)return;
+   say('bot','Здравствуйте! Принимаем детей с 4 лет. Первое занятие пробное и бесплатное, экипировку дадим в прокат. Свободное место и время подберёт администратор.<span class="src">Поиск по базе школы: NEW-01</span>');
+   kb([{t:'Оставить заявку',go:async()=>{say('user','Оставить заявку');await sleep(500);say('bot','Заявка принята. Администратор напишет вам в течение дня и предложит дату пробного занятия.');card({cls:'new',tag:'Заявка · новичок',who:'Новый контакт · Telegram',q:'Девочка, 4 года. Хотят пробное занятие.',bot:'Бот рассказал условия, место не обещал.',acts:['Взял','Назначить пробное']})}},{t:'Что взять на пробное'}])},
+ privacy:async()=>{say('user','Дайте телефон мамы Саши из нашей группы');await sleep(600);routeRefuse()},
+ move:async()=>{setView('admin');await sleep(700);$('mvDay').value='sat';$('mvTime').value='11:00';$('mvPlace').value='Лёд · арена № 2';await sleep(700);
+   await moveSession('sat','11:00','Лёд · арена № 2','2017');await sleep(800);setView('parent')},
+ match:async()=>{await sleep(300);vP.appendChild(el('sys','Воскресенье, 19 октября'));
+   say('push',`<span class="h">Разбор матча · ШРС-2017 — «Северяне» 4:3</span>Тренер загрузил видео, ИИ подготовил короткий разбор:<ul><li><b>07:12</b> гол в большинстве</li><li><b>21:40</b> поздний возврат в оборону</li><li><b>38:05</b> победный гол — атаку начал Миша</li></ul>На этой неделе работаем над игрой в меньшинстве.<span class="src">ИИ · по видео матча, проверено тренером</span>`);
+   kb([{t:'Открыть разбор',go:()=>showApp('match')},{t:'Смотреть видео'}])},
+ app:async()=>{showApp('week')}
+};
+async function play(id){
+  const my=++run; if(id!=='app'&&id!=='move') setView('parent');
+  if(['schedule','pay','gear','injury','unknown','newbie','privacy'].includes(id)) vP.appendChild(el('sys','Сегодня'));
+  await S[id](my);
+}
+document.querySelectorAll('.sbtn').forEach(b=>b.onclick=()=>{
+  document.querySelectorAll('.sbtn').forEach(x=>x.setAttribute('aria-pressed',x===b));play(b.dataset.s);
+  if(innerWidth<=900) document.querySelector('.phone').scrollIntoView({behavior:reduce?'auto':'smooth',block:'start'})});
+
+/* ---------- маршрутизация живого вопроса ---------- */
+const STOP=[
+ {k:'safety',re:/не забрал|потерял|пропал|не могу найти|обижа|бьют|избил|угрож/i},
+ {k:'health',re:/болит|травм|ушиб|перелом|сотряс|кров|упал|температур|голова кружится/i},
+ {k:'complaint',re:/жалоб|кричит|орёт|орет|оскорб|груб|унижа|несправедлив/i},
+ {k:'money',re:/рассроч|вернуть деньги|возврат|скидк|два платежа|оплатил.*долг/i}
+];
+const OTHERS=/(телефон|номер|контакт|адрес|данные).{0,25}(мам|пап|родител|других|друг)|кто ещё в группе|кто еще в группе|список (детей|группы)/i;
+function routeHuman(kind,q){
+  const T={
+   safety:['Срочно позвоните администратору: дежурный телефон есть в приложении. Если есть угроза жизни или здоровью — <b>102</b> или <b>103</b>. Я уже отправил сообщение в рабочий чат с пометкой «срочно».','urgent','Срочно · безопасность','Бот дал телефоны 102/103, карточка срочная.'],
+   health:['Вопросы о здоровье я не консультирую — тут важно мнение врача. Передал ваше сообщение администратору, он свяжется с вами. При сильной боли обратитесь к врачу или вызовите скорую: <b>103</b>.','urgent','Срочно · здоровье','Бот не давал советов, рекомендовал врача и 103.'],
+   complaint:['Спасибо, что написали. Передал ваше обращение администратору школы, с вами свяжутся лично.','','Жалоба','Бот ситуацию не обсуждал и не оценивал.'],
+   money:['Общее правило могу подсказать, но решение по оплате в вашем случае принимает администратор. Передал ему вопрос, ответ придёт сюда.','','Оплата · особый случай','Бот решений по деньгам не принимал.'],
+   none:['Точного ответа на этот вопрос у меня нет, не хочу вас запутать. Передал вопрос администратору — обычно отвечаем в течение 2 часов, ответ придёт сюда.','','Нет в базе','Ответ в базе не найден, бот ничего не придумывал.']
+  }[kind];
+  say('bot',T[0]+`<span class="src">${kind==='none'?'Ответа нет в базе → человеку':'Код · стоп-тема → человеку'}</span>`);
+  vP.appendChild(el('sys',`Обращение № ${cardNo+1} передано администратору`));down(vP);
+  return card({cls:T[1],tag:T[2],q,bot:T[3],acts:kind==='none'?['Взял','Ответить','Добавить в базу']:['Взял','Позвонить','Закрыть']});
+}
+function routeRefuse(){say('bot','Не могу делиться информацией о других детях и семьях. Если нужно связаться с другими родителями, попросите администратора — он передаст ваш контакт.<span class="src">Код · защита персональных данных</span>')}
+
+function localGuess(q){
+  const s=q.toLowerCase();
+  if(/(когда|во сколько|расписан|тренировк).*(миш|у нас|сын|ребён|ребен|неделе|завтра|сегодня)|(миш|у нас).*(трениров|расписан)/i.test(s)) return {route:'schedule'};
+  if(/(оплач|оплат|долг|заплат)/i.test(s)&&/(миш|у нас|мы |наш|октябр|ноябр)/i.test(s)) return {route:'payment'};
+  const rules=[['PAY-02',/сколько стоит|цена|стоимость абонем|абонемент/],['PAY-01',/до какого|когда платить|как оплат|ерип|реквизит/],['PAY-03',/перерасч|болел.*оплат/],
+   ['NEW-01',/пробн|записат|с какого возраст|попробовать/],['GEAR-02',/прокат/],['GEAR-01',/экипировк|купить|что нужно из|защит/],['GEAR-03',/заточ|точить/],['GEAR-04',/форм[ау]/],
+   ['RULE-01',/за сколько приход|опозд|во сколько приход/],['RULE-02',/взять с собой|что взять/],['RULE-03',/раздевалк|трибун|смотреть/],['RULE-04',/заболел|болеет|не придём|не придем|пропустим/],
+   ['PLACE-01',/адрес|арена|как добрать|где находит/],['CONT-01',/администратор|связаться|телефон школ/],['EVT-01',/турнир|соревнован/]];
+  const hit=rules.filter(r=>r[1].test(s)).slice(0,2);
+  if(!hit.length) return /погод|курс|доллар|анекдот|рецепт|футбол/i.test(s)?{route:'offtopic'}:{route:'human'};
+  return {route:'answer',answer:hit.map(h=>FAQ.find(f=>f.id===h[0]).a).join(' '),used:hit.map(h=>h[0])};
+}
+function prompt(q){
+  return `Ты — помощник детской хоккейной школы ШРС (Минск) в Telegram. Родитель (Анна, мама ${KID.name}, группа ${KID.group}) написал вопрос.
+Реши, как на него ответить, и верни ТОЛЬКО JSON:
+{"route":"answer|schedule|payment|human|offtopic","answer":"текст для родителя","used":["ID"]}
+
+Правила:
+- "schedule" — вопрос о расписании тренировок своего ребёнка (когда, во сколько, где тренировка у нас). Текст не пиши, его соберёт код.
+- "payment" — вопрос о статусе оплаты своего ребёнка (оплачен ли месяц, есть ли долг). Текст не пиши.
+- "answer" — ответ полностью есть в базе ниже. Пиши по-русски, на «вы», 1–3 предложения, первое предложение — сам ответ. Цены, даты, суммы бери только дословно из базы. В "used" перечисли ID строк.
+- "human" — ответа в базе нет или он неполный, или нужно решение человека. Ничего не придумывай.
+- "offtopic" — вопрос не про школу.
+- Никаких медицинских советов, обещаний места в группе, оценок тренеров, данных других детей.
+
+База знаний школы:
+${FAQ.map(f=>`${f.id} | ${f.q} | ${f.a}`).join('\n')}
+
+Вопрос родителя: ${q}`;
+}
+async function ask(q){
+  if(busy) return; busy=true; $('sendBtn').disabled=true;
+  setView('parent'); run++; say('user',esc(q));
+  try{
+    for(const st of STOP) if(st.re.test(q)){await sleep(500);routeHuman(st.k,q);return}
+    if(OTHERS.test(q)){await sleep(500);routeRefuse();return}
+    const t=await typing(sample?'ИИ ищет ответ в базе школы':'');
+    let r=null, viaAI=false;
+    if(sample){try{r=await sample.json(prompt(q),{modelTier:'quick'});viaAI=true}catch(e){
+      if(['not_granted','sampling_disabled','not_declared','capability_disabled','capability_removed'].includes(e.code)){sample=null;setAI(false)}
+      r=null}}
+    if(!r||typeof r!=='object'||!r.route){await sleep(700);r=localGuess(q);viaAI=false}
+    t.remove();
+    const src='Поиск';
+    if(r.route==='schedule'){scheduleMsg();return}
+    if(r.route==='payment'){payMsg();return}
+    if(r.route==='offtopic'){say('bot','Я помогаю только с вопросами школы: расписание, оплата, экипировка, запись, правила. Спросите, пожалуйста, о них.');return}
+    const used=Array.isArray(r.used)?r.used.filter(id=>FAQ.some(f=>f.id===id)):[];
+    if(r.route==='answer'&&r.answer&&used.length){
+      const base=used.map(id=>FAQ.find(f=>f.id===id).a).join(' ');
+      const nums=(String(r.answer).match(/\d+/g)||[]).filter(n=>!base.includes(n));
+      if(!nums.length){say('bot',esc(r.answer)+`<span class="src">${src} · база школы: ${used.join(', ')}</span>`);return}
+    }
+    routeHuman('none',q);
+  } finally {busy=false;$('sendBtn').disabled=false}
+}
+$('compose').onsubmit=e=>{e.preventDefault();const q=$('ask').value.trim();if(!q)return;$('ask').value='';ask(q)};
+
+function setAI(on){const s=$('aiState');s.classList.toggle('on',on);s.textContent=on?'ИИ подключён · отвечает только по базе школы':'Ответы только из базы школы, без генерации ИИ'}
+
+/* ---------- панель ---------- */
+const TOPICS=[['Расписание',34,0],['Оплата',20,2],['Экипировка и форма',12,0],['Запись новичков',8,1],['Турниры и сборы',8,0],['Здоровье',3,2],['Жалобы и споры',0,2],['Другое',4,6]];
+$('bars').innerHTML=TOPICS.map(([n,a,h])=>`<div class="brow"><span>${n}</span><div class="track" role="img" aria-label="${n}: ${a+h}% вопросов"><i class="b" style="width:${a/36*100}%"></i><i class="hm" style="width:${h/36*100}%"></i></div><em>${a+h}%</em></div>`).join('');
+(function(){const v=[52,61,66,68],W=360,H=170,l=34,r=14,t=14,b=28,x=i=>l+i*(W-l-r)/(v.length-1),y=p=>t+(80-p)/(80-40)*(H-t-b);
+ let s='';[40,60,80].forEach(p=>s+=`<line x1="${l}" x2="${W-r}" y1="${y(p)}" y2="${y(p)}" stroke="var(--line)"/><text x="${l-6}" y="${y(p)+4}" text-anchor="end">${p}%</text>`);
+ const pts=v.map((p,i)=>`${x(i)},${y(p)}`).join(' ');
+ s+=`<polygon points="${x(0)},${y(40)} ${pts} ${x(3)},${y(40)}" fill="var(--blue)" opacity=".12"/><polyline points="${pts}" fill="none" stroke="var(--blue)" stroke-width="2.5" stroke-linejoin="round"/>`;
+ v.forEach((p,i)=>{s+=`<circle cx="${x(i)}" cy="${y(p)}" r="${i===3?5:3}" fill="${i===3?'var(--blue)':'var(--panel)'}" stroke="var(--blue)" stroke-width="2"/><text x="${x(i)}" y="${H-8}" text-anchor="middle">${i+1}-я неделя</text>`});
+ s+=`<text x="${x(3)-8}" y="${y(68)-10}" text-anchor="end" style="fill:var(--ink);font-weight:700">68%</text>`;$('trend').innerHTML=s})();
+
+/* ---------- старт ---------- */
+vA.appendChild(el('sys','Сюда приходят вопросы, которые бот передаёт людям, и отсюда школа пишет родителям первой.'));
+renderAdminTool(); renderApp();
+vP.appendChild(el('sys','Сегодня'));
+vP.appendChild(el('msg user','Когда у Миши тренировки на этой неделе?<span class="time">19:12</span>'));
+vP.appendChild(el('msg bot',`Тренировки Миши (группа ${KID.group}) на неделе 20–26 октября:${schedHTML()}Приходите за 30 минут до начала.<span class="src">Код · месячное расписание школы</span><span class="time">19:12</span>`));
+setAI(false);
+
+</script>
+</body></html>

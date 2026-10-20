@@ -1,0 +1,48 @@
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1,viewport-fit=cover">
+<title>Помощник для родителей хоккейных школ</title>
+<link rel="preconnect" href="https://fonts.googleapis.com"><link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Oswald:wght@500;600&family=Golos+Text:wght@400;500;700&display=swap">
+<style>
+:root{--navy:#13243A;--ice:#EEF3F7;--card:#FAFCFD;--muted:#4A5A6C;--red:#C8233A;--blue:#1F5FA8;--gold:#F2C14E}
+*{box-sizing:border-box}
+body{margin:0;background:var(--ice);color:var(--navy);font-family:'Golos Text',Arial,sans-serif;line-height:1.5}
+.hero{background:var(--navy);color:#F4F8FB;position:relative;overflow:hidden}
+.hero::before{content:"";position:absolute;top:0;bottom:0;right:22%;width:6px;background:var(--red)}
+.hero::after{content:"";position:absolute;top:0;bottom:0;right:36%;width:10px;background:var(--blue);opacity:.5}
+.wrap{max-width:1040px;margin:0 auto;padding-left:max(20px,env(safe-area-inset-left));padding-right:max(20px,env(safe-area-inset-right))}
+.hero .wrap{padding-block:64px 72px;position:relative;z-index:1}
+.eyebrow{font-size:13px;letter-spacing:.14em;text-transform:uppercase;color:#F07A8A;font-weight:700;margin:0 0 16px}
+h1{font-family:Oswald,Arial,sans-serif;font-weight:600;font-size:clamp(34px,6vw,60px);line-height:1.08;margin:0;max-width:16ch;text-wrap:balance}
+.lead{color:#B8C8D8;font-size:18px;max-width:56ch;margin:20px 0 0}
+.cards{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:20px;padding-block:40px 56px}
+@media (max-width:860px){.cards{grid-template-columns:1fr}.hero::before,.hero::after{display:none}}
+a.card{display:flex;flex-direction:column;gap:10px;background:var(--card);border-radius:16px;padding:28px;text-decoration:none;color:inherit;border:2px solid transparent;transition:border-color .15s,transform .15s}
+a.card:hover,a.card:focus-visible{border-color:var(--blue);transform:translateY(-2px);outline:none}
+.card h2{font-family:Oswald,Arial,sans-serif;font-weight:600;font-size:28px;margin:0}
+.card p{margin:0;color:var(--muted)}
+.card .go{margin-top:auto;padding-top:8px;font-weight:700;color:var(--blue)}
+.card.main{background:var(--navy);color:#F4F8FB}.card.main p{color:#B8C8D8}.card.main .go{color:var(--gold)}
+footer{color:var(--muted);font-size:14px;padding-block:0 40px}
+@media (prefers-reduced-motion:reduce){a.card{transition:none}}
+</style>
+</head>
+<body>
+<header class="hero"><div class="wrap">
+<p class="eyebrow">Для руководства ФХБ · октябрь 2026</p>
+<h1>Цифровой помощник для родителей хоккейных школ</h1>
+<p class="lead">Telegram-бот отвечает родителям круглосуточно по правилам школы: расписание ребёнка, оплата, экипировка, запись. Всё, чего нет в базе, передаёт администратору.</p>
+</div></header>
+<main class="wrap">
+<div class="cards">
+<a class="card main" href="kp.html"><h2>Коммерческое предложение</h2><p>Задача, решение, тариф «Стандарт» для пилота в ШРС и дополнительные услуги. Цены условные.</p><span class="go">Смотреть →</span></a>
+<a class="card" href="demo.html"><h2>Демо бота</h2><p>Кликабельный макет: сценарии родителя, рабочий чат администратора, приложение и панель руководителя. Данные условные.</p><span class="go">Открыть демо →</span></a>
+<a class="card" href="../"><h2>Платформа для родителей</h2><p>Демо платформы «Трибуна»: онлайн-курсы, семинары и вебинары для родителей юных спортсменов. Дополнительная услуга.</p><span class="go">Открыть платформу →</span></a>
+</div>
+<footer>Ярослав Коробов · разработка чат-ботов и автоматизация</footer>
+</main>
+</body>
+</html>
