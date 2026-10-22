@@ -79,7 +79,7 @@ const NAV={
 const MARK='<svg viewBox="0 0 28 28" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" aria-hidden="true"><path d="M4 21a10 10 0 0 1 20 0"/><path d="M8.5 21a5.5 5.5 0 0 1 11 0"/><path d="M3 24.5h22"/></svg>';
 const logo=(to)=>`<button class="logo" data-go="${to}" aria-label="Трибуна, на главную"><span class="mk">${MARK}</span><span><b>ТРИБУНА</b><small>Для родителей</small></span></button>`;
 const DEMO='<p class="demo">Интерактивный макет: оплата условная, данные только в вашем браузере, имена вымышленные. Цены, цифры и тексты уроков — примеры.</p>';
-const LINES='<svg class="lines" viewBox="0 0 1440 700" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#EBC98F" stroke-opacity=".16" stroke-width="2.5" aria-hidden="true"><rect x="60" y="60" width="1320" height="580" rx="10"/><line x1="720" y1="60" x2="720" y2="640"/><circle cx="720" cy="350" r="120"/><rect x="60" y="215" width="170" height="270"/><rect x="1210" y="215" width="170" height="270"/><path d="M230 290a80 80 0 0 1 0 120M1210 290a80 80 0 0 0 0 120"/></svg>';
+const LINES='<svg class="lines" viewBox="0 0 1440 700" preserveAspectRatio="xMidYMid slice" fill="none" stroke="#FFD21F" stroke-opacity=".16" stroke-width="2.5" aria-hidden="true"><rect x="60" y="60" width="1320" height="580" rx="10"/><line x1="720" y1="60" x2="720" y2="640"/><circle cx="720" cy="350" r="120"/><rect x="60" y="215" width="170" height="270"/><rect x="1210" y="215" width="170" height="270"/><path d="M230 290a80 80 0 0 1 0 120M1210 290a80 80 0 0 0 0 120"/></svg>';
 function shell(body){
   const cur=S.view==='course'||S.view==='lesson'?'courses':S.view==='plans'||S.view==='pay'?'profile':S.view;
   const par=S.role==='parent',m=me();
@@ -92,7 +92,7 @@ function shell(body){
    ${par?`<p class="lv">${active(m)?'Подписка активна':m.pend?'Оплата проверяется':m.club?'Доступ от клуба':'Без подписки'}</p>${m.certAt?`<p class="xp" style="color:var(--mint)">Сертификат ${certNo(m)}</p>`:''}<div class="prog" style="margin-top:8px"><i style="width:${Math.min(100,days/30*100)}%"></i></div><p class="xp">${active(m)?`осталось ${days} дн. · до ${fd(m.until)}`:m.club?'базовый курс и сертификат открыты':'открыт первый урок каждого курса'}</p>`:`<p class="lv">${pend?pend+' оплат ждут':'Всё подтверждено'}</p><p class="xp">${D.parents.filter(active).length} активных подписок</p>`}</div></aside>
   <main class="main" id="main">${DEMO}<div class="mtop">${logo(to)}<button class="btn ghost sm" data-act="out">Выйти</button></div>${body}</main></div>`}
 function pubTop(){
-  return `<header class="pub-top"><div class="pub-in">${logo('landing')}<nav aria-label="Разделы">${S.view==='landing'?[['#courses','Курсы'],['#events','События'],['#clubs','Клубам'],['#plans','Тарифы'],['#faq','Вопросы']].map(([k,t])=>`<button data-scroll="${k}">${t}</button>`).join(''):''}</nav><button class="btn sm" data-go="login">Войти</button></div></header>`}
+  return `<header class="pub-top ${S.view==='landing'?'over':''}"><div class="pub-in">${logo('landing')}<nav aria-label="Разделы">${S.view==='landing'?[['#courses','Курсы'],['#events','События'],['#clubs','Клубам'],['#plans','Тарифы'],['#faq','Вопросы']].map(([k,t])=>`<button data-scroll="${k}">${t}</button>`).join(''):''}</nav><button class="btn sm" data-go="login">Войти</button></div></header>`}
 const head=(eb,t,acts='')=>`<div class="head"><div><p class="eyebrow">${eb}</p><h1>${t}</h1></div>${acts?`<div class="acts">${acts}</div>`:''}</div>`;
 
 /* ---------- общие блоки ---------- */
@@ -105,23 +105,38 @@ function statusPill(p){return active(p)?`<span class="pill ok">до ${fd(p.until
 const mins=c=>c.lessons.reduce((a,l)=>a+l.min,0);
 const author=c=>`<div class="au"><span class="av">${initials(c.by)}</span><p class="small"><b>${esc(c.by)}</b><br><span class="muted">по материалам: ${esc(c.basis)}</span></p></div>`;
 const evDate=e=>{const d=new Date(e.at);return `<div class="date"><b>${d.getDate()}</b><span>${MON3[d.getMonth()]}</span></div>`};
-const ring=(pct,size=84)=>{const r=size/2-8,c=2*Math.PI*r;return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${pct}%" style="flex:none"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#F4DAA9"/><stop offset="1" stop-color="#DCA75B"/></linearGradient></defs><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#232725" stroke-width="8"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#rg)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c*pct/100} ${c}" transform="rotate(-90 ${size/2} ${size/2})"/><text x="50%" y="50%" dy=".35em" text-anchor="middle" font-family="Manrope Variable,Manrope,sans-serif" font-weight="750" font-size="${size/4.2}" fill="#F3F0E8">${pct}%</text></svg>`};
+const ring=(pct,size=84)=>{const r=size/2-8,c=2*Math.PI*r;return `<svg width="${size}" height="${size}" viewBox="0 0 ${size} ${size}" role="img" aria-label="${pct}%" style="flex:none"><defs><linearGradient id="rg" x1="0" y1="0" x2="1" y2="1"><stop offset="0" stop-color="#FFE36B"/><stop offset="1" stop-color="#FFC400"/></linearGradient></defs><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="#232725" stroke-width="8"/><circle cx="${size/2}" cy="${size/2}" r="${r}" fill="none" stroke="url(#rg)" stroke-width="8" stroke-linecap="round" stroke-dasharray="${c*pct/100} ${c}" transform="rotate(-90 ${size/2} ${size/2})"/><text x="50%" y="50%" dy=".35em" text-anchor="middle" font-family="Manrope Variable,Manrope,sans-serif" font-weight="750" font-size="${size/4.2}" fill="#F3F0E8">${pct}%</text></svg>`};
 
 /* ---------- лендинг ---------- */
 function vLanding(){
   const cs=COURSES.filter(c=>courseOpen(c)&&sportOk(c)).length, up=upcoming().sort((a,b)=>a.at-b.at), ev=up.length;
   const e0=up[0];
   return `
- <section class="hero"><div>${LINES}</div><div class="in hero-grid">
-  <div><p class="eyebrow" style="margin-bottom:16px">Для родителей юных спортсменов · вся Беларусь</p>
-   <h1>Родители — <em>часть команды</em></h1>
-   <p class="lead">Курсы, семинары и вебинары о том, как поддерживать ребёнка в спорте и не мешать тренеру. Любой вид спорта, любой город.</p>
-   <div class="acts"><button class="btn" data-scroll="#plans">Смотреть тарифы ${ic('arrow')}</button><button class="btn ghost" data-act="enter-new">Посмотреть без подписки</button></div></div>
-  <div class="pv" aria-label="Пример кабинета">
-   <div class="card"><div class="r">${ring(50)}<div><p class="eyebrow" style="margin:0 0 4px">Ваш прогресс</p><b>Родитель на трибуне</b><span class="small muted">2 из 4 уроков пройдено</span></div></div></div>
-   <div class="card"><div class="r">${e0?evDate(e0):''}<div><p class="eyebrow" style="margin:0 0 4px">${e0?e0.type:'События'}</p><b>${e0?esc(e0.t):'Расписание появится скоро'}</b>${e0?`<span class="small muted">${hm(e0.at)} · запись по подписке</span>`:''}</div></div></div>
-   <div class="card"><div class="r"><span class="ic gold">${ic('check')}</span><div><p class="eyebrow" style="margin:0 0 4px">Подписка</p><b>Активна до 27 октября</b><span class="small muted">все курсы и записи вебинаров</span></div></div></div>
-  </div></div></section>
+ <section class="story" id="story" aria-label="Как работает Трибуна">
+  <div class="stage" id="stage"><div class="poster" aria-hidden="true">${LINES}</div>
+   <div class="hud" aria-hidden="true"><span id="hud-n"><b>01</b> / 05</span><div class="bar"><i id="hud-bar"></i></div><span class="hint"><i></i>листайте</span></div></div>
+  <div class="steps">
+   <article class="step on"><div class="in"><p class="stepchip"><b>01</b>Для родителей · вся Беларусь</p>
+    <h1>Родители — <em>часть команды</em></h1>
+    <p class="lead">Курсы, вебинары и сертификат для родителей юных спортсменов. Любой вид спорта, любой город, оплата через ЕРИП.</p>
+    <div class="acts"><button class="btn" data-scroll="#plans">Смотреть тарифы ${ic('arrow')}</button><button class="btn ghost glass" data-act="enter-new">Войти без подписки</button></div></div></article>
+   <article class="step"><div class="in"><p class="stepchip"><b>02</b>Курсы</p>
+    <h2>Уроки <em>по 5 минут</em></h2>
+    <p class="lead">По материалам Sport Parent EU, CDC и Positive Coaching Alliance. После урока — вопрос-проверка и два вопроса ребёнку «обсудите дома».</p>
+    <div class="gstats"><div class="glass"><b>${cs}</b><span>курсов</span></div><div class="glass"><b>${LESSONS.filter(l=>l.q).length}</b><span>уроков</span></div><div class="glass"><b>1-й</b><span>урок бесплатно</span></div></div></div></article>
+   <article class="step"><div class="in"><p class="stepchip"><b>03</b>Вебинары и семинары</p>
+    <h2>Эксперты <em>в прямом эфире</em></h2>
+    <p class="lead">Запись одной кнопкой, напоминание за день, записи прошедших эфиров в архиве.</p>
+    ${e0?`<div class="glass gcard">${evDate(e0)}<div><p class="eyebrow">${e0.type} · ${hm(e0.at)}</p><b>${esc(e0.t)}</b></div></div>`:''}</div></article>
+   <article class="step"><div class="in"><p class="stepchip"><b>04</b>Сертификат</p>
+    <h2>Номер, который <em>проверит тренер</em></h2>
+    <p class="lead">Базовый курс за 20 минут — и у вас сертификат родителя. Клубы покупают коды для всех семей команды.</p>
+    <div class="glass gcard"><span class="ic gold">${ic('shield')}</span><div><p class="eyebrow">Сертификат родителя</p><p class="num">ТРБ-26-0002</p></div><span class="pill ok" style="margin-left:auto">действителен</span></div></div></article>
+   <article class="step"><div class="in"><p class="stepchip"><b>05</b>Сезон</p>
+    <h2>Ваш план <em>на сезон</em></h2>
+    <div class="gplan">${PLANS.map(p=>`<div class="glass"><b>${p.price} BYN</b><span>${p.t}</span></div>`).join('')}</div>
+    <div class="acts"><button class="btn" data-scroll="#plans">Выбрать подписку ${ic('arrow')}</button><button class="btn ghost glass" data-scroll="#clubs">Для клубов</button></div></div></article>
+  </div></section><!--/story-->
 
  <section class="sec"><div class="grid g4" style="gap:14px">
   <button class="tile" data-scroll="#courses"><span class="ic">${ic('book')}</span><span><b>${cs} ${cs===1?'курс':'курсов'}</b><span class="s">первый урок бесплатно</span></span></button>
@@ -129,24 +144,6 @@ function vLanding(){
   <button class="tile" data-scroll="#plans"><span class="ic">${ic('wallet')}</span><span><b>от 15 BYN в месяц</b><span class="s">1, 3 или 12 месяцев</span></span></button>
   <button class="tile" data-act="enter-new"><span class="ic">${ic('user')}</span><span><b>Войти в макет</b><span class="s">без пароля</span></span></button>
  </div></section>
-
- <section class="sec"><div class="sec-h"><div><p class="eyebrow">Что внутри</p><h2>Три вещи, которые нужны каждую неделю сезона</h2></div></div>
-  <div class="bento">
-   <div class="card b-big"><p class="eyebrow">Курсы</p><h3 style="font-size:1.4rem">Короткие уроки с видео и проверкой</h3>
-    <div class="player">${LINES}<span class="pill tag">Урок 1 · 5 мин</span><span class="play">${ic('play')}</span><div class="bar"><i></i></div></div>
-    <p class="small muted">В конце каждого урока один вопрос. Прогресс сохраняется, можно вернуться с телефона.</p></div>
-   <div class="card b-s"><p class="eyebrow">Личный кабинет</p><h3>Весь путь на одном экране</h3><div class="ringbox">${ring(68,96)}<p class="small muted">Уроки, записи, срок подписки.</p></div></div>
-   <div class="card b-s"><p class="eyebrow">Для любого спорта</p><h3>Основа одна, детали свои</h3><p class="small muted" style="margin-top:8px">Общие курсы про поддержку и подростков, плюс отдельные курсы по видам спорта.</p></div>
-  </div></section>
-
- <section class="sec"><div class="sec-h"><div><p class="eyebrow">Как это работает</p><h2>Пять шагов от первого входа до привычки</h2></div><p>Первый урок смотрите бесплатно, подписка нужна для остального.</p></div>
-  <div class="card"><div class="route">
-   <div class="stop on"><div class="n">1</div><div><h3>Регистрация</h3><p>Имя, вид спорта ребёнка, город. Данных о детях не нужно.</p></div></div>
-   <div class="stop on"><div class="n">2</div><div><h3>Первый урок</h3><p>Бесплатно в каждом курсе. Посмотрите, подходит ли.</p></div></div>
-   <div class="stop"><div class="n">3</div><div><h3>Подписка</h3><p>1, 3 или 12 месяцев. Оплата по реквизитам или через ЕРИП.</p></div></div>
-   <div class="stop"><div class="n">4</div><div><h3>Курсы</h3><p>Проходите в своём темпе, прогресс сохраняется.</p></div></div>
-   <div class="stop"><div class="n">5</div><div><h3>Вебинары</h3><p>Записываетесь, в день события получаете ссылку.</p></div></div>
-  </div></div></section>
 
  <section class="sec" id="courses"><div class="sec-h"><div><p class="eyebrow">Библиотека</p><h2>Курсы</h2></div><p>Выберите вид спорта: список покажет общие курсы и курсы именно для него.</p></div>
   ${chipsHTML(SPORTS)}
@@ -288,9 +285,9 @@ function areaChart(w,labels,vals){
   const grid=[0,1,2,3,4].map(k=>{const v=max*k/4,yy=y(v);return `<line x1="${pl}" x2="${w-pr}" y1="${yy}" y2="${yy}" stroke="#262a2b" stroke-width="1"/><text x="${pl-8}" y="${yy+4}" text-anchor="end">${Math.round(v)}</text>`}).join('');
   const xl=labels.map((l,i)=>`<text x="${x(i)}" y="${h-8}" text-anchor="${i===0?'start':i===labels.length-1?'end':'middle'}">${l}</text>`).join('');
   const lx=x(vals.length-1),ly=y(vals[vals.length-1]);
-  return `<svg class="chart" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Подписчики по месяцам: ${labels.map((l,i)=>l+' '+vals[i]).join(', ')}"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#EBC98F" stop-opacity=".34"/><stop offset="1" stop-color="#EBC98F" stop-opacity="0"/></linearGradient></defs>${grid}
-   <path d="${d} L${x(vals.length-1)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#ag)"/><path class="ln" pathLength="1" d="${d}" fill="none" stroke="#EBC98F" stroke-width="2.4" stroke-linecap="round"/>
-   <circle cx="${lx}" cy="${ly}" r="5" fill="#0A0B0B" stroke="#EBC98F" stroke-width="2.4"/><text x="${lx}" y="${ly-14}" text-anchor="end" style="fill:#F3F0E8;font-weight:650">${vals[vals.length-1]}</text>${xl}</svg>`}
+  return `<svg class="chart" width="${w}" height="${h}" viewBox="0 0 ${w} ${h}" role="img" aria-label="Подписчики по месяцам: ${labels.map((l,i)=>l+' '+vals[i]).join(', ')}"><defs><linearGradient id="ag" x1="0" y1="0" x2="0" y2="1"><stop offset="0" stop-color="#FFD21F" stop-opacity=".34"/><stop offset="1" stop-color="#FFD21F" stop-opacity="0"/></linearGradient></defs>${grid}
+   <path d="${d} L${x(vals.length-1)} ${y(0)} L${x(0)} ${y(0)}Z" fill="url(#ag)"/><path class="ln" pathLength="1" d="${d}" fill="none" stroke="#FFD21F" stroke-width="2.4" stroke-linecap="round"/>
+   <circle cx="${lx}" cy="${ly}" r="5" fill="#05080A" stroke="#FFD21F" stroke-width="2.4"/><text x="${lx}" y="${ly-14}" text-anchor="end" style="fill:#F3F0E8;font-weight:650">${vals[vals.length-1]}</text>${xl}</svg>`}
 function donut(parts){
   const tot=parts.reduce((a,p)=>a+p.v,0)||1,r=62,c=2*Math.PI*r;let off=0;
   return `<svg width="168" height="168" viewBox="0 0 168 168" role="img" aria-label="Доли по видам спорта"><circle cx="84" cy="84" r="${r}" fill="none" stroke="#1e2220" stroke-width="20"/>${parts.map(p=>{const len=p.v/tot*c,s=`<circle cx="84" cy="84" r="${r}" fill="none" stroke="${p.c}" stroke-width="20" stroke-dasharray="${Math.max(0,len-3)} ${c}" stroke-dashoffset="${-off}" transform="rotate(-90 84 84)"/>`;off+=len;return s}).join('')}</svg>`}
@@ -300,8 +297,8 @@ function drawCharts(){document.querySelectorAll('[data-chart]').forEach(el=>{con
 function vDash(){
   const ps=D.parents,act=ps.filter(active).length,pend=ps.filter(p=>p.pend),soon=ps.filter(p=>active(p)&&p.until-Date.now()<7*DAY);
   const cnt={};ps.forEach(p=>cnt[p.sport]=(cnt[p.sport]||0)+1);
-  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]),cols=['#EBC98F','#4ED1A1','#3FBFD2','#8E86E8'];
-  const parts=top.slice(0,4).map(([s,v],i)=>({s,v,c:cols[i]}));const rest=top.slice(4).reduce((a,[,v])=>a+v,0);if(rest)parts.push({s:'Остальные виды',v:rest,c:'#5b605e'});
+  const top=Object.entries(cnt).sort((a,b)=>b[1]-a[1]),cols=['#FFD21F','#3FD98A','#46C6D8','#E07A45'];
+  const parts=top.slice(0,4).map(([s,v],i)=>({s,v,c:cols[i]}));const rest=top.slice(4).reduce((a,[,v])=>a+v,0);if(rest)parts.push({s:'Остальные виды',v:rest,c:'#4a5a54'});
   const first=ps.filter(p=>p.d.length).length,withEv=ps.filter(p=>p.reg.length).length;
   const fun=[['Зарегистрировались',ps.length],['Посмотрели урок',first],['Получили сертификат',ps.filter(p=>p.certAt).length],['Оформили подписку',act],['Записались на событие',withEv]];
   const labels=['Май','Июн','Июл','Авг','Сен','Окт'],vals=[2,3,5,6,8,act];
@@ -314,7 +311,7 @@ function vDash(){
   <div class="grid g-main mt"><div class="card"><p class="eyebrow">Активные подписки по месяцам</p><h3 style="font-size:1.25rem;margin-bottom:8px">Динамика подписчиков</h3><div data-chart data-l='${JSON.stringify(labels)}' data-v='${JSON.stringify(vals)}' style="min-height:290px"></div></div>
   <div class="card"><p class="eyebrow">Состав</p><h3 style="font-size:1.25rem">Виды спорта</h3><div class="donut">${donut(parts)}<div class="c"><b>${ps.length}</b><span>родителей</span></div></div>
    <div class="leg">${parts.map(p=>`<div><i style="background:${p.c}"></i><span>${esc(p.s)}</span><b>${p.v}</b></div>`).join('')}</div></div></div>
-  <div class="grid g-main mt"><div class="card"><p class="eyebrow">Воронка</p><h3 style="font-size:1.25rem">От регистрации до события</h3><div class="fun">${fun.map(([l,v],i)=>`<div><div class="l"><span>${l}</span><b>${v} <span class="muted" style="font-weight:500">· ${Math.round(v/ps.length*100)}%</span></b></div><div class="bar"><i style="width:${v/ps.length*100}%;background:${['#5b605e','#3FBFD2','#8E86E8','#EBC98F','#4ED1A1'][i]}"></i></div></div>`).join('')}</div></div>
+  <div class="grid g-main mt"><div class="card"><p class="eyebrow">Воронка</p><h3 style="font-size:1.25rem">От регистрации до события</h3><div class="fun">${fun.map(([l,v],i)=>`<div><div class="l"><span>${l}</span><b>${v} <span class="muted" style="font-weight:500">· ${Math.round(v/ps.length*100)}%</span></b></div><div class="bar"><i style="width:${v/ps.length*100}%;background:${['#4a5a54','#46C6D8','#E07A45','#FFD21F','#3FD98A'][i]}"></i></div></div>`).join('')}</div></div>
   <div class="card"><p class="eyebrow">Требует внимания</p><h3 style="font-size:1.25rem;margin-bottom:4px">Оплаты и сроки</h3>
    ${pend.map(p=>`<div class="row"><div class="t"><p><b>${esc(p.n)}</b></p><p class="small muted">${PLANS.find(x=>x.id===p.pend).t}</p></div><button class="btn sm" data-confirm="${p.id}">Подтвердить</button></div>`).join('')}
    ${soon.map(p=>`<div class="row"><div class="t"><p><b>${esc(p.n)}</b></p><p class="small muted">истекает ${fd(p.until)}</p></div><span class="pill wait">Скоро</span></div>`).join('')}
@@ -357,9 +354,15 @@ function vContent(){
 const VIEWS={landing:vLanding,login:vLogin,plans:vPlans,pay:vPay,home:vHome,courses:vCourses,course:vCourse,lesson:vLesson,events:vEvents,profile:vProfile,dash:vDash,users:vUsers,clubs:vClubs,aevents:vAEvents,content:vContent};
 function render(){
   const body=VIEWS[S.view]();
-  $('#app').innerHTML=S.role?shell(body):pubTop()+`<main class="pub">${DEMO}${body}</main>`;
-  drawCharts();
+  if(S.role)$('#app').innerHTML=shell(body);
+  else{const k=body.indexOf('<!--/story-->'),pre=k<0?'':body.slice(0,k),post=k<0?body:body.slice(k+13);$('#app').innerHTML=pubTop()+pre+`<main class="pub">${DEMO}${post}</main>`}
+  drawCharts();hud();
+  if(window.T3&&$('#stage'))T3.mount($('#stage'));
 }
+function hud(){const st=$('#story');if(!st)return;const r=st.getBoundingClientRect(),p=Math.min(1,Math.max(0,-r.top/(st.offsetHeight-innerHeight))),n=Math.min(4,Math.round(p*4));
+  const b=$('#hud-bar');if(b)b.style.transform=`scaleX(${p.toFixed(3)})`;const t=$('#hud-n');if(t)t.innerHTML=`<b>0${n+1}</b> / 05`;
+  document.querySelectorAll('.step').forEach((e,i)=>e.classList.toggle('on',i===n))}
+addEventListener('scroll',hud,{passive:true});
 let rt;addEventListener('resize',()=>{clearTimeout(rt);rt=setTimeout(drawCharts,150)});
 
 /* ---------- события ---------- */
