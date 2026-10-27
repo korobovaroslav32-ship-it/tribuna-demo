@@ -1,0 +1,27 @@
+<!doctype html>
+<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1">
+<meta name="robots" content="noindex,nofollow"><title>Проверка связи</title>
+<style>
+:root{--bg:#f3f4f6;--card:#fff;--ink:#1d2329;--mut:#5d6670;--ok:#2f9e44;--bad:#c92a2a;--line:#e3e6ea}
+@media (prefers-color-scheme:dark){:root{--bg:#15191d;--card:#1f2429;--ink:#e8eaec;--mut:#9aa3ab;--ok:#51cf66;--bad:#ff6b6b;--line:#343b42}}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.45 system-ui,-apple-system,"Segoe UI",Roboto,sans-serif;padding:16px}
+main{max-width:560px;margin:0 auto}h1{font-size:22px;margin:4px 0}p{color:var(--mut);margin:4px 0 14px}
+ul{list-style:none;padding:0;margin:0;background:var(--card);border:1px solid var(--line);border-radius:12px}
+li{display:flex;justify-content:space-between;gap:10px;padding:12px 14px;border-top:1px solid var(--line)}li:first-child{border-top:0}
+b.ok{color:var(--ok)}b.bad{color:var(--bad)}small{color:var(--mut)}
+button{margin-top:14px;width:100%;font:600 16px system-ui;padding:12px;border:0;border-radius:10px;background:var(--ink);color:var(--bg)}
+#ip{margin-top:12px;font-size:14px;color:var(--mut)}
+</style></head><body><main>
+<h1>Проверка связи</h1><p>Откройте без VPN. Зелёное — сервис доступен, красное — заблокирован.</p>
+<ul id="l"></ul><div id="ip"></div><button id="b">Проверить ещё раз</button></main>
+<script>
+const S=[["GitHub Pages (страница)","https://korobovaroslav32-ship-it.github.io/tribuna-demo/"],["Supabase · база (*.supabase.co)","https://supabase.co"],["Supabase · сайт","https://supabase.com"],["Supabase · API","https://api.supabase.com"],
+["Google Firebase · база","https://firestore.googleapis.com"],["Google Таблицы · скрипт","https://script.google.com"],["Google Таблицы · API","https://sheets.googleapis.com"],
+["Cloudflare","https://cloudflare.com"],["Cloudflare Workers","https://workers.cloudflare.com"],["Яндекс Облако","https://cloud.yandex.ru"],["jsDelivr (библиотеки)","https://cdn.jsdelivr.net/npm/three@0.128.0/package.json"]];
+async function t(u){const c=new AbortController(),tm=setTimeout(()=>c.abort(),9000),s=performance.now();
+  try{await fetch(u+(u.includes("?")?"&":"?")+"t="+Date.now(),{mode:"no-cors",cache:"no-store",signal:c.signal});return [true,Math.round(performance.now()-s)]}catch(e){return [false,0]}finally{clearTimeout(tm)}}
+async function run(){const l=document.getElementById("l");l.innerHTML=S.map(([n],i)=>`<li><span>${n}</span><b id="r${i}"><small>проверяю…</small></b></li>`).join("");
+  await Promise.all(S.map(async([n,u],i)=>{const [ok,ms]=await t(u);const e=document.getElementById("r"+i);e.className=ok?"ok":"bad";e.textContent=ok?`✓ ${ms} мс`:"✗ нет"}));
+  try{const j=await (await fetch("https://ipinfo.io/json",{cache:"no-store"})).json();document.getElementById("ip").textContent=`Ваше подключение: ${j.country||"?"}, ${j.city||""} · ${j.org||""}`}catch(e){document.getElementById("ip").textContent="Страну подключения определить не удалось"}}
+document.getElementById("b").onclick=run;run();
+</script></body></html>
